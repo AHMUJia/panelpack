@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "panelpack"
+version = "0.1.0"
+description = "Compose sub-figure PDFs into publication-ready composite figures"
+requires-python = ">=3.9"
+license = "MIT"
+dependencies = ["pymupdf>=1.24.0"]
+
+[project.scripts]
+panelpack = "panelpack.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/panelpack/panelpack"
