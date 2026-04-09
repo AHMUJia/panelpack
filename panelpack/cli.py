@@ -365,6 +365,9 @@ def compute_geometry(
     weights instead of being derived from aspect ratios.
     """
     label_col = 0.0 if no_labels else (label_size + 2)
+    # Reserve space between panels for the next panel's label (~1.5× label width)
+    label_right = 0.0 if no_labels else (label_size * 1.5)
+    inter_gap = gap + label_right  # gap between panels (includes label room)
     content_w = page_w - 2 * margin - label_col
     n_rows = len(panel_rows)
     available_h = page_h - 2 * margin - (n_rows - 1) * gap
@@ -377,7 +380,7 @@ def compute_geometry(
         raw_heights = []
         for row_panels, row_ratios in zip(panel_rows, ratios):
             n_cols = len(row_panels)
-            avail_w = content_w - (n_cols - 1) * gap
+            avail_w = content_w - (n_cols - 1) * inter_gap
             col_widths = [r * avail_w for r in row_ratios]
             h = max(cw / (p.src_w / p.src_h) for p, cw in zip(row_panels, col_widths))
             raw_heights.append(h)
@@ -393,7 +396,7 @@ def compute_geometry(
     y = margin
     for row_panels, row_ratios, row_h in zip(panel_rows, ratios, row_heights):
         n_cols = len(row_panels)
-        avail_w = content_w - (n_cols - 1) * gap
+        avail_w = content_w - (n_cols - 1) * inter_gap
         col_widths = [r * avail_w for r in row_ratios]
 
         x = margin + label_col
@@ -417,7 +420,7 @@ def compute_geometry(
                 panel=p, x=dx, y=dy, w=dw, h=dh,
                 label_x=lx, label_y=ly,
             ))
-            x += cw + gap
+            x += cw + inter_gap
         y += row_h + gap
 
     # Actual content height (last gap replaced by margin)
@@ -493,11 +496,13 @@ def calc_panel_sizes(
         page_w, page_h = page_h, page_w
 
     label_col = 0.0 if no_labels else (label_size + 2)
+    label_right = 0.0 if no_labels else (label_size * 1.5)
+    inter_gap = gap + label_right
     content_w = page_w - 2 * margin - label_col
 
     results = []
     for n in range(1, max_cols + 1):
-        avail = content_w - (n - 1) * gap
+        avail = content_w - (n - 1) * inter_gap
         w_pt = avail / n
         w_mm = w_pt / PT_PER_MM
         w_inch = w_pt / PT_PER_INCH
