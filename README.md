@@ -1,23 +1,154 @@
+[中文](#中文) | [English](#english)
+
+---
+
 # panelpack
 
-Compose sub-figure images into publication-ready composite figures from the command line.
+<a name="中文"></a>
 
-**panelpack** auto-detects sub-figure files (PDF, PNG, JPG, TIFF, ...) by naming convention, infers panel order, and merges them into a single PDF with bold panel labels (A, B, C, ...).
+> 一行命令，将子图拼成发表级组合图。
 
-All files in the same folder are treated as panels of **one** figure.
+**panelpack** 是一个命令行工具，能自动识别文件夹中的子图文件（PDF / PNG / JPG / TIFF 等），按面板标签排序，合并为带有 **A, B, C...** 标注的组合图 PDF。
+
+<p align="center">
+  <img src="docs/images/demo_figure4.png" width="70%" alt="Demo: 6-panel figure with layout 1,2,3">
+</p>
+<p align="center"><i>6 个子图自动拼合为一张组合图（布局 1,2,3，第三行比例 5:3:3）</i></p>
+
+---
+
+## 核心特性
+
+- **自动识别** — 支持 `Fig3A.pdf`、`Figure A.png`、`B_plot.jpg`、`C.tiff` 等多种命名，放在同一文件夹即可
+- **多格式混用** — PDF（矢量无损）、PNG、JPG、TIFF、BMP、GIF、WebP
+- **灵活布局** — `--layout "1,2,3;()()(5:3:3)"` 一个参数搞定行列与宽度比例
+- **中文标点兼容** — `（1：1：2）` 和 `(1:1:2)` 均可
+- **尺寸计算器** — `--sizes` 输出 R/ggplot2 的 ggsave 推荐尺寸，确保文字不缩放
+
+## 安装
+
+```bash
+# 从 GitHub 安装
+pip install git+https://github.com/AHMUJia/panelpack.git
+
+# 或者本地安装
+git clone https://github.com/AHMUJia/panelpack.git
+cd panelpack
+pip install -e .
+```
+
+依赖：Python >= 3.9，[PyMuPDF](https://pymupdf.readthedocs.io/)
+
+## 快速上手
+
+```bash
+# 自动识别当前目录的子图并组合
+panelpack
+
+# 指定布局：第1行1张，第2行2张，第3行3张
+panelpack --layout 1,2,3
+
+# 布局 + 宽度比例一体化写法
+panelpack --layout "3,2;(1:1:2)(1:1)"
+
+# 预览布局，不生成文件
+panelpack --dry-run -v
+```
+
+## 支持的文件格式
+
+| 格式 | 扩展名 |
+|------|--------|
+| PDF | `.pdf`（矢量无损嵌入） |
+| PNG | `.png` |
+| JPEG | `.jpg` `.jpeg` |
+| TIFF | `.tiff` `.tif` |
+| BMP / GIF / WebP | `.bmp` `.gif` `.webp` |
+
+## 文件命名规范
+
+同一文件夹中所有被识别的文件自动归为 **一张图** 的面板。支持以下命名（可混用）：
+
+| 命名方式 | 示例 |
+|----------|------|
+| 带图号 | `Fig3A_volcano.pdf`、`Figure 3B.png`、`Fig.3C_plot.jpg` |
+| 无图号 | `Fig A.pdf`、`Fig.B_plot.png`、`Figure C.tiff` |
+| 纯字母 | `A. description.pdf`、`B_barplot.png`、`C.jpg`、`D.pdf` |
+
+## 布局语法
+
+```bash
+# 基础布局（每行等宽）
+panelpack --layout 2,2            # 2行，每行2张
+panelpack --layout 1,2,3          # 3行：1+2+3张
+
+# 带宽度比例（括号内写比例）
+panelpack --layout "3,2;(1:1:2)(1:1)"
+panelpack --layout "1,2,3;()()(5:3:3)"   # 空括号 = 等宽
+
+# 中文标点也行
+panelpack --layout "3,2;（1：1：2）（1：1）"
+```
+
+```
+布局示意：--layout "1,2,3;()()(5:3:3)"
+
+Row 1:  [       A (全宽)        ]
+Row 2:  [    B    ] [    C    ]
+Row 3:  [ D (5) ] [ E (3) ] [ F (3) ]
+```
+
+## R/ggplot2 推荐导出尺寸
+
+运行 `panelpack --sizes` 查看各行面板数对应的导出尺寸，确保合并后文字不缩放：
+
+```
+$ panelpack --sizes
+
+  每行面板数       宽度        高度   R ggsave()
+  ----------  ---------- ---------- ----------------------
+  1               197 mm     148 mm width=7.8, height=5.8
+  2                98 mm      73 mm width=3.8, height=2.9
+  3                64 mm      48 mm width=2.5, height=1.9
+  4                48 mm      36 mm width=1.9, height=1.4
+```
+
+```r
+# R 中按推荐尺寸导出，合并后 7pt 字体保持 7pt
+ggsave("Fig1A.pdf", plot_a, width = 7.8, height = 5.8)  # 一行1张
+ggsave("Fig1B.pdf", plot_b, width = 3.8, height = 2.9)  # 一行2张
+ggsave("Fig1D.pdf", plot_d, width = 2.5, height = 1.9)  # 一行3张
+```
+
+## 更多示例
+
+<p align="center">
+  <img src="docs/images/demo_figure5.png" width="70%" alt="Demo: 5-panel mixed formats">
+</p>
+<p align="center"><i>5 个混合格式子图（PDF + JPG + PNG），布局 2,1,2</i></p>
+
+---
+
+<a name="english"></a>
+
+# English
+
+> One command to compose sub-figures into publication-ready composite figures.
+
+**panelpack** is a CLI tool that auto-detects sub-figure files (PDF, PNG, JPG, TIFF, ...) in a folder, sorts them by panel label, and merges them into a single PDF with bold **A, B, C...** labels.
+
+## Features
+
+- **Auto-detection** — recognizes `Fig3A.pdf`, `Figure A.png`, `B_plot.jpg`, `C.tiff`, and many more naming patterns
+- **Multi-format** — PDF (vector, lossless), PNG, JPG, TIFF, BMP, GIF, WebP in the same folder
+- **Flexible layout** — `--layout "1,2,3;()()(5:3:3)"` — rows, columns, and width ratios in one flag
+- **Chinese punctuation** — `（1：1：2）` works alongside `(1:1:2)`
+- **Size calculator** — `--sizes` prints recommended R/ggplot2 `ggsave()` dimensions to preserve text size
 
 ## Installation
 
 ```bash
-pip install panelpack
-```
-
-Or install from source:
-
-```bash
-git clone https://github.com/panelpack/panelpack.git
-cd panelpack
-pip install -e .
+pip install git+https://github.com/AHMUJia/panelpack.git
 ```
 
 Requires Python >= 3.9 and [PyMuPDF](https://pymupdf.readthedocs.io/).
@@ -25,280 +156,127 @@ Requires Python >= 3.9 and [PyMuPDF](https://pymupdf.readthedocs.io/).
 ## Quick start
 
 ```bash
-# Auto-detect and compose all panels in current directory
-panelpack
-
-# Specify layout: 1 panel in row 1, 2 in row 2, 3 in row 3
-panelpack --layout 1,2,3
-
-# Layout with inline width ratios — all in one flag
-panelpack --layout "3,2;(1:1:2)(1:1)"
-
-# Preview layout without generating PDF
-panelpack --dry-run -v
-
-# Explicit panel mapping (for non-standard filenames)
-panelpack --panels "A=volcano.pdf,B=heatmap.png,C=barplot.jpg"
+panelpack                                       # auto-detect & compose
+panelpack --layout 1,2,3                        # specify rows
+panelpack --layout "3,2;(1:1:2)(1:1)"           # layout + inline ratios
+panelpack --dry-run -v                           # preview only
+panelpack --panels "A=plot.pdf,B=img.png"        # explicit mapping
 ```
 
 ## Supported formats
 
 | Format | Extensions |
 |--------|------------|
-| PDF | `.pdf` |
+| PDF | `.pdf` (embedded as vector) |
 | PNG | `.png` |
 | JPEG | `.jpg`, `.jpeg` |
 | TIFF | `.tiff`, `.tif` |
-| BMP | `.bmp` |
-| GIF | `.gif` |
-| WebP | `.webp` |
-
-PDF panels are embedded as vector graphics (lossless). Raster images are inserted at their native resolution.
+| BMP / GIF / WebP | `.bmp`, `.gif`, `.webp` |
 
 ## File naming convention
 
-panelpack recognizes a wide range of naming patterns. The figure number is **optional** — all matched files in the same folder are always treated as panels of one figure.
+All recognized files in the same folder are treated as panels of **one** figure. Naming styles can be mixed freely.
 
-### With figure number (used for output naming)
+| Style | Examples |
+|-------|----------|
+| With figure number | `Fig3A_volcano.pdf`, `Figure 3B.png`, `Fig.3C_plot.jpg` |
+| Without number | `Fig A.pdf`, `Fig.B_plot.png`, `Figure C.tiff` |
+| Bare label | `A. description.pdf`, `B_barplot.png`, `C.jpg`, `D.pdf` |
 
-| Pattern | Example |
-|---------|---------|
-| `Fig{N}{L}` | `Fig3A_volcano.pdf` |
-| `Fig.{N}{L}` | `Fig.3A_plot.png` |
-| `Fig. {N} {L}` | `Fig. 3 A description.pdf` |
-| `Figure {N}{L}` | `Figure 3A heatmap.pdf` |
-| `Figure_{N}_{L}` | `Figure_4_D_plot.jpg` |
-
-### Without figure number
-
-| Pattern | Example |
-|---------|---------|
-| `Fig {L}` | `Fig A_something.pdf` |
-| `Fig.{L}` | `Fig.B_plot.png` |
-| `Fig. {L}` | `Fig. C description.tiff` |
-| `Figure {L}` | `Figure D_heatmap.pdf` |
-| `{L}.` | `A. description.pdf` |
-| `{L}_` | `B_barplot.png` |
-| `{L}-` | `C-scatter.jpg` |
-| `{L}` | `D.pdf` (single letter filename) |
-
-**Output naming**: If any panel has a figure number, the most common number is used (e.g. `Figure3_combined.pdf`). Otherwise: `Figure_combined.pdf`.
-
-You can mix naming styles freely — `Figure 3A.pdf`, `Fig.3B.png`, `C_plot.jpg`, `D.tiff` all work together in the same folder.
+**Output naming**: uses the most common figure number found (e.g. `Figure3_combined.pdf`), or `Figure_combined.pdf` if none.
 
 ## Layout syntax
 
-The `--layout` flag controls how panels are arranged. Each row's panel count is separated by commas. Width ratios can be written inline with parentheses.
-
-### Basic layout (equal width per row)
-
 ```bash
-panelpack --layout 2,2          # 2 rows, 2 panels each, all equal width
-panelpack --layout 1,2,3        # 3 rows: 1 + 2 + 3 panels
-panelpack --layout 3,2          # 2 rows: 3 + 2 panels
+# Basic (equal width per row)
+panelpack --layout 2,2
+panelpack --layout 1,2,3
+
+# With inline width ratios
+panelpack --layout "3,2;(1:1:2)(1:1)"       # row 1 = 1:1:2, row 2 = equal
+panelpack --layout "1,2,3;()()(5:3:3)"      # only row 3 has custom ratios
+panelpack --layout "3,2(1:1:2)(1:1)"         # semicolon is optional
 ```
 
-By default, panels in the same row share **equal width**.
-
-### Layout with inline ratios
-
-Append width ratios in parentheses after a `;` separator. Each `(...)` group corresponds to one row:
-
-```bash
-# Row 1: A B C at 1:1:2, Row 2: D E at equal width
-panelpack --layout "3,2;(1:1:2)(1:1)"
-
-# Same thing — semicolon is optional
-panelpack --layout "3,2(1:1:2)(1:1)"
-
-# Only set ratios for row 3, rows 1-2 stay equal (empty parens)
-panelpack --layout "1,2,3;()()(5:3:3)"
 ```
-
-**Chinese punctuation is also supported** — useful for quick input:
-
-```bash
-panelpack --layout "3,2;（1：1：2）（1：1）"
-```
-
-### Separate `--ratios` flag
-
-For more control, use `--ratios` separately. Rows are separated by `;`, columns by `:`:
-
-```bash
-# Row 1: equal, Row 2: equal, Row 3: 5:3:3
-panelpack --layout 1,2,3 --ratios "auto;auto;5:3:3"
-
-# All rows proportional to source widths
-panelpack --layout 2,2 --ratios "prop;prop"
-```
-
-| Keyword | Meaning |
-|---------|---------|
-| `auto` or empty `()` | Equal width (default) |
-| `prop` | Proportional to source image widths |
-| `5:3:3` | Explicit ratio |
-
-> `--ratios` takes priority over inline ratios in `--layout`.
-
-### Visual summary
-
-```
---layout "1,2,3;()()(5:3:3)"
+Visual: --layout "1,2,3;()()(5:3:3)"
 
 Row 1:  [    A (full width)    ]
 Row 2:  [   B   ] [   C   ]
 Row 3:  [ D (5) ][ E (3)][ F (3)]
 ```
 
-## Recommended sub-figure export sizes
+### Separate `--ratios` flag
 
-To preserve text size after composing, export each sub-figure at the **exact size** it will occupy in the final layout. Use `panelpack --sizes` to calculate:
+```bash
+panelpack --layout 1,2,3 --ratios "auto;auto;5:3:3"
+panelpack --layout 2,2 --ratios "prop;prop"   # proportional to source widths
+```
+
+| Keyword | Meaning |
+|---------|---------|
+| `auto` or `()` | Equal width (default) |
+| `prop` | Proportional to source image widths |
+| `5:3:3` | Explicit ratio |
+
+## Recommended export sizes
+
+```bash
+panelpack --sizes                         # A4 default
+panelpack --sizes --page-size A3 --landscape
+panelpack --sizes --page-size 180x240     # custom WxH in mm
+```
 
 ```
 $ panelpack --sizes
 
-Recommended sub-figure export sizes
-  Page: A4 portrait (210x297 mm)
-  Margin: 10pt, Gap: 6pt, Label: 14pt
-  Aspect ratio: 1.33 (width/height)
-
   Panels/row        Width     Height R ggsave()
-  -----------  ---------- ---------- ------------------------------
-  1                197 mm     148 mm width=7.8, height=5.8
-  2                 98 mm      73 mm width=3.8, height=2.9
-  3                 64 mm      48 mm width=2.5, height=1.9
-  4                 48 mm      36 mm width=1.9, height=1.4
+  ----------  ---------- ---------- ----------------------
+  1               197 mm     148 mm width=7.8, height=5.8
+  2                98 mm      73 mm width=3.8, height=2.9
+  3                64 mm      48 mm width=2.5, height=1.9
+  4                48 mm      36 mm width=1.9, height=1.4
 ```
 
 ### R / ggplot2 example
 
-If your layout is `--layout 1,2,3` (row 1: 1 panel, row 2: 2 panels, row 3: 3 panels):
-
 ```r
-library(ggplot2)
-
-# Panel A — full width (1 per row)
-ggsave("Fig1A_volcano.pdf", plot_a, width = 7.8, height = 5.8)
-
-# Panels B, C — half width (2 per row)
-ggsave("Fig1B_heatmap.pdf", plot_b, width = 3.8, height = 2.9)
-ggsave("Fig1C_barplot.pdf", plot_c, width = 3.8, height = 2.9)
-
-# Panels D, E, F — third width (3 per row)
-ggsave("Fig1D_scatter.pdf", plot_d, width = 2.5, height = 1.9)
-ggsave("Fig1E_boxplot.pdf", plot_e, width = 2.5, height = 1.9)
-ggsave("Fig1F_survival.pdf", plot_f, width = 2.5, height = 1.9)
+ggsave("Fig1A.pdf", plot_a, width = 7.8, height = 5.8)  # 1 per row
+ggsave("Fig1B.pdf", plot_b, width = 3.8, height = 2.9)  # 2 per row
+ggsave("Fig1D.pdf", plot_d, width = 2.5, height = 1.9)  # 3 per row
 ```
 
-With these sizes, `panelpack` places each panel at **scale ~ 1.0**, so a `7pt` font in R stays `7pt` in the final figure.
-
-### Other page sizes
-
-```bash
-panelpack --sizes --page-size A3 --landscape
-panelpack --sizes --page-size letter
-panelpack --sizes --page-size 180x240       # custom WxH in mm
-panelpack --sizes --aspect-ratio 1.0        # square panels
-```
+With these sizes, panelpack places each panel at **scale ~ 1.0** — a 7pt font in R stays 7pt in the final figure.
 
 ## Python API
 
 ```python
 from panelpack import interactive_compose
 
-# One-liner: detect panels and compose
 interactive_compose("./Figure4", layout="1,2,3;()()(5:3:3)")
-
-# All options
-interactive_compose(
-    "./my_figures",
-    layout="2,2",
-    page_size="A4",
-    label_size=14,
-    output="Figure1.pdf",
-    open_after=True,
-)
 ```
 
 ## CLI reference
 
-```
-panelpack [options]
-```
-
-### Panel detection
-
 | Option | Description |
 |--------|-------------|
 | `-d, --dir DIR` | Directory to scan (default: `.`) |
-| `--figure N` | Override figure number for output naming |
-| `--panels SPEC` | Explicit mapping: `A=file1.pdf,B=plot.png,...` |
-| `--pattern REGEX` | Custom regex (must capture groups: figure number, panel label) |
-
-### Layout
-
-| Option | Description |
-|--------|-------------|
-| `--layout SPEC` | Panels per row with optional inline ratios: `1,2,3` or `3,2;(1:1:2)(1:1)` |
-| `--ratios SPEC` | Width ratios per row: `auto;auto;5:3:3`. Overrides inline ratios. |
-| `--row-heights SPEC` | Row height weights: `2:3:4`. Default: auto from aspect ratios. |
-
-### Page & style
-
-| Option | Description |
-|--------|-------------|
-| `--page-size SIZE` | `A4`, `A3`, `letter`, or `WxH` in mm (default: `A4`) |
+| `--layout SPEC` | Rows with optional ratios: `1,2,3` or `3,2;(1:1:2)(1:1)` |
+| `--ratios SPEC` | Width ratios: `auto;auto;5:3:3`. Overrides inline. |
+| `--row-heights SPEC` | Row height weights: `2:3:4` |
+| `--page-size SIZE` | `A4`, `A3`, `letter`, or `WxH` in mm |
 | `--landscape` | Landscape orientation |
-| `--label-size PT` | Panel label font size (default: `14`) |
+| `--label-size PT` | Label font size (default: `14`) |
 | `--margin PT` | Page margin (default: `10`) |
 | `--gap PT` | Gap between panels (default: `6`) |
 | `--no-labels` | Omit panel labels |
-
-### Utilities
-
-| Option | Description |
-|--------|-------------|
+| `--figure N` | Override figure number for output naming |
+| `--panels SPEC` | Explicit mapping: `A=file.pdf,B=img.png,...` |
 | `--sizes` | Print recommended export sizes and exit |
-| `--aspect-ratio R` | Width/height ratio for `--sizes` (default: `1.33`) |
-| `--max-cols N` | Max panels per row for `--sizes` table (default: `4`) |
 | `--dry-run` | Preview layout without generating PDF |
-| `--open` | Open output file after generation |
-| `-v, --verbose` | Verbose output with scale info |
-| `-o, --output FILE` | Output filename (default: `Figure<N>_combined.pdf`) |
-
-## Examples
-
-### Simple 2x2 grid
-
-```bash
-panelpack --layout 2,2 -o Figure1.pdf
-```
-
-### Layout with inline ratios
-
-```bash
-panelpack --layout "3,2;(1:1:2)(1:1)" -o Figure5.pdf
-```
-
-### Complex layout with separate ratios
-
-```bash
-panelpack --layout 1,2,3 --ratios "auto;auto;5:3:3" -o Figure4.pdf
-```
-
-### Mixed formats (PDF + PNG + JPG)
-
-```bash
-# Folder contains: A_volcano.pdf, B_heatmap.png, C_photo.jpg, D_gel.tiff
-panelpack --layout 2,2
-```
-
-### A3 landscape for poster figures
-
-```bash
-panelpack --page-size A3 --landscape --layout 2,3 -o poster_fig.pdf
-```
+| `--open` | Open output after generation |
+| `-v, --verbose` | Verbose output |
+| `-o, --output FILE` | Output filename |
 
 ## License
 
