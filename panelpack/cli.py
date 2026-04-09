@@ -78,7 +78,11 @@ _PAT_NO_NUM = re.compile(
     r"[Ff]ig(?:ure)?\.?\s*[_\s\-]*([A-Za-z])(?![a-zA-Z])"
 )
 
-# Priority 3: Bare label at the start of filename
+# Priority 3: Bare number+label at the start of filename
+#   1B., 1e., 2A_, 3C-description …
+_PAT_NUM_LABEL = re.compile(r"^(\d+)\s*([A-Za-z])(?![a-zA-Z])")
+
+# Priority 4: Bare label at the start of filename
 #   A., A_, A-, A<space>, A_something, or just "A" (single letter stem)
 _PAT_BARE = re.compile(r"^([A-Za-z])(?:[\.\s_\-]|$)")
 
@@ -86,10 +90,10 @@ _PAT_BARE = re.compile(r"^([A-Za-z])(?:[\.\s_\-]|$)")
 def _extract_panel_info(stem: str) -> tuple[int | None, str] | None:
     """Extract ``(figure_number_or_None, label)`` from a filename stem.
 
-    Tries three patterns in priority order so that all of these work::
+    Tries four patterns in priority order so that all of these work::
 
         Figure 3A, Figure A, Fig A, Fig.A, Fig. A,
-        Fig3A, Fig.3A, Fig. 3A, A., A_description …
+        Fig3A, Fig.3A, Fig. 3A, 1B., 1e., A., A_description …
     """
     m = _PAT_WITH_NUM.search(stem)
     if m:
@@ -98,6 +102,10 @@ def _extract_panel_info(stem: str) -> tuple[int | None, str] | None:
     m = _PAT_NO_NUM.search(stem)
     if m:
         return None, m.group(1).upper()
+
+    m = _PAT_NUM_LABEL.match(stem)  # anchored to start
+    if m:
+        return int(m.group(1)), m.group(2).upper()
 
     m = _PAT_BARE.match(stem)  # anchored to start
     if m:
@@ -412,7 +420,10 @@ def compute_geometry(
             x += cw + gap
         y += row_h + gap
 
-    return rects
+    # Actual content height (last gap replaced by margin)
+    actual_h = y - gap + margin
+
+    return rects, actual_h
 
 
 # ---------------------------------------------------------------------------
@@ -720,11 +731,13 @@ def main(argv: list[str] | None = None):
         page_w, page_h = page_h, page_w
 
     # --- Geometry ---
-    rects = compute_geometry(
+    rects, actual_h = compute_geometry(
         panel_rows, ratios, page_w, page_h,
         args.margin, args.gap, args.label_size, args.no_labels,
         row_height_weights,
     )
+    # Trim page height to actual content (keep width unchanged)
+    final_h = min(page_h, actual_h)
 
     # Print scale info
     if args.verbose:
@@ -747,7 +760,7 @@ def main(argv: list[str] | None = None):
         output = "Figure_combined.pdf"
     output_path = directory / output
 
-    doc = compose(rects, page_w, page_h, args.label_size, args.no_labels)
+    doc = compose(rects, page_w, final_h, args.label_size, args.no_labels)
     doc.save(str(output_path))
     doc.close()
     print(f"Saved: {output_path}")
@@ -815,10 +828,11 @@ def interactive_compose(
     if landscape:
         page_w, page_h = page_h, page_w
 
-    rects = compute_geometry(
+    rects, actual_h = compute_geometry(
         panel_rows, ratio_list, page_w, page_h,
         margin, gap, label_size, no_labels, rh_weights,
     )
+    final_h = min(page_h, actual_h)
 
     if output:
         out_name = output
@@ -828,7 +842,7 @@ def interactive_compose(
         out_name = "Figure_combined.pdf"
     output_path = directory / out_name
 
-    doc = compose(rects, page_w, page_h, label_size, no_labels)
+    doc = compose(rects, page_w, final_h, label_size, no_labels)
     doc.save(str(output_path))
     doc.close()
     print(f"Saved: {output_path}")

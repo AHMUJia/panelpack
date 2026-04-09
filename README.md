@@ -11,9 +11,9 @@
 **panelpack** 是一个命令行工具，能自动识别文件夹中的子图文件（PDF / PNG / JPG / TIFF 等），按面板标签排序，合并为带有 **A, B, C...** 标注的组合图 PDF。
 
 <p align="center">
-  <img src="docs/images/demo_figure4.png" width="70%" alt="Demo: 6-panel figure with layout 1,2,3">
+  <img src="docs/images/demo_figure4.png" width="70%" alt="Demo: 5-panel figure with layout 2,1,2">
 </p>
-<p align="center"><i>6 个子图自动拼合为一张组合图（布局 1,2,3，第三行比例 5:3:3）</i></p>
+<p align="center"><i>5 个子图自动拼合为一张组合图（布局 2,1,2，页面高度自动裁剪）</i></p>
 
 ---
 
@@ -123,9 +123,9 @@ ggsave("Fig1D.pdf", plot_d, width = 2.5, height = 1.9)  # 一行3张
 ## 更多示例
 
 <p align="center">
-  <img src="docs/images/demo_figure5.png" width="70%" alt="Demo: 5-panel mixed formats">
+  <img src="docs/images/demo_figure5.png" width="70%" alt="Demo: 6-panel mixed formats">
 </p>
-<p align="center"><i>5 个混合格式子图（PDF + JPG + PNG），布局 2,1,2</i></p>
+<p align="center"><i>6 个混合格式子图（PDF + JPG + PNG），布局 3,2,1，页面高度自动裁剪</i></p>
 
 ---
 
