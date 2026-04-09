@@ -39,6 +39,18 @@ pip install -e .
 
 依赖：Python >= 3.9，[PyMuPDF](https://pymupdf.readthedocs.io/)
 
+### Claude Code Skill（可选）
+
+如果你使用 [Claude Code](https://claude.ai/code)，可以将本仓库的 skill 复制到本地，即可用自然语言驱动 panelpack：
+
+```bash
+# 将 skill 复制到 Claude Code skills 目录
+cp -r .claude/skills/panelpack ~/.claude/skills/
+```
+
+之后在 Claude Code 中直接描述需求即可，例如：
+> "把 Figure3 文件夹里的6张子图拼起来，第一行1张，第二行2张，第三行3张"
+
 ## 快速上手
 
 ```bash
@@ -152,6 +164,17 @@ pip install git+https://github.com/AHMUJia/panelpack.git
 ```
 
 Requires Python >= 3.9 and [PyMuPDF](https://pymupdf.readthedocs.io/).
+
+### Claude Code Skill (optional)
+
+If you use [Claude Code](https://claude.ai/code), copy the included skill to your local skills directory for natural-language-driven figure composition:
+
+```bash
+cp -r .claude/skills/panelpack ~/.claude/skills/
+```
+
+Then just describe what you need in Claude Code, e.g.:
+> "Compose the 6 sub-figures in Figure3 folder — 1 on row 1, 2 on row 2, 3 on row 3"
 
 ## Quick start
 
